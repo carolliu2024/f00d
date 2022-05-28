@@ -6,6 +6,9 @@ import React, {useState, useEffect, useRef} from 'react';
 import { StyleSheet, Text, View, Button, Image } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+
+import * as Location from 'expo-location';
+
 // import NativeImagePickerIOS from 'react-native/Libraries/Image/NativeImagePickerIOS';
 
 Notifications.setNotificationHandler({
@@ -17,8 +20,13 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  const [location, setLocation] = useState(null);
+  const [where, setWhere] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
+  // Changes page w/o re-rendering (reloading)
   const notificationListener = useRef();
   const responseListener = useRef();
 
@@ -34,12 +42,51 @@ export default function App() {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log(response);
     });
+    
+    // Define function and call instantly
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync();
+      let {coords} = await Location.getCurrentPositionAsync();
+      // let lat = location.coords.latitude;
+      // let lon = location.coords.longitude;
+      // console.log("what even is lat: ",typeof(lat))
+      // let sarge = await Location.geocodeAsync("Sargent Hall")
+
+      // const {latitude, longitude} = location;
+      // console.log("Longitude:",location.coords.longitude);
+      // let coords = location.coords;
+      const {latitude, longitude} = coords;
+      address = await Location.reverseGeocodeAsync({
+        latitude,longitude
+      })
+      // console.log("Address: ", address);
+      
+
+      setLocation(location);
+      setWhere(address);
+      
+    })();
 
     return () => {
       Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
+
+  let text = 'Waiting..';
+  let address = 'waiting.';
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+    address = JSON.stringify(where)
+  }
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState([]);
@@ -99,7 +146,7 @@ export default function App() {
         <Button
           title="Press to Send Notification"
           onPress={async () => {
-            await sendPushNotification(expoPushToken);
+            await sendPushNotification(expoPushToken, text, address);
           }}
         />
       </View>
@@ -145,12 +192,12 @@ export default function App() {
 }
 
 // Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
-async function sendPushNotification(expoPushToken) {
+async function sendPushNotification(expoPushToken, text, address) {
   const message = {
     to: expoPushToken,
     sound: 'default',
-    title: 'Original Title',
-    body: 'And here is the body!',
+    title: 'f00d',
+    body: `Address: ${address}. Are you eating at ${text}?`,
     data: { someData: 'goes here' },
   };
 
