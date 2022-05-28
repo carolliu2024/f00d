@@ -3,7 +3,7 @@ import DropDownPicker from 'react-native-dropdown-picker'
 // import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
 import React, {useState} from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, Image } from 'react-native';
 // import NativeImagePickerIOS from 'react-native/Libraries/Image/NativeImagePickerIOS';
 
 
@@ -15,6 +15,8 @@ export default function App() {
     {label: 'Food2', value: 'f2'},
     {label: 'Food3', value: 'f3'}
   ]);
+
+  const [pickedImagePath, setPickedImagePath] = useState('');
 
   const options1 = {
     title: 'Take Image',
@@ -46,37 +48,50 @@ export default function App() {
     console.log(result);
 
     if (!result.cancelled) {
-      setImage(result.uri);
+      // setImage(result.uri);
+      setPickedImagePath(result.uri);
+      console.log(result.uri);
     }
   };
 
   return(
-    <View style={styles.container}>
-    <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-    <StatusBar style="auto" />
+    <View style = {styles.container}>
+        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+        <StatusBar style="auto" />
 
-    <View style = {styles.imgBox}>
-      <Text>Upload your image here!</Text>
-    </View>
-    <Button
-      title = "Select from Image Gallery"
-      onPress = {pickImage}
-    />
+        <View style = {styles.imgBox}>
+          {
+            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+             <Image
+              source={{ uri: pickedImagePath }}
+              style={styles.image}
+            />
+          }
+        </View>
+        <Button
+          title = "Select from Image Gallery"
+          onPress = {pickImage}
+        />
+        <View style={styles.imageContainer}>
+          
+        </View>
 
-    <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
 
-    <DropDownPicker
-      open = {open}
-      items={items}
-      value = {value}
-      setOpen = {setOpen}
-      setItems={setItems}
-      setValue = {setValue}
-      // containerStyle={{height: 40}}
-      // defaultIndex={0}
-      multiple = {true}
-    />
-  </View>
+        <DropDownPicker
+          open = {open}
+          items={items}
+          value = {value}
+          setOpen = {setOpen}
+          setItems={setItems}
+          setValue = {setValue}
+          // containerStyle={{height: 40}}
+          // defaultIndex={0}
+          multiple = {true}
+        />
+
+
+      </View>
   );
     
 }
@@ -112,7 +127,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     
-  }
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover'
+  },
 });
 
 // export default App;
