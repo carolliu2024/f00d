@@ -127,8 +127,17 @@ const photoPage = ({navigation}) => {
 
   useEffect(() => {
     console.log("dishPortions: ", dishPortions)
+    if (dishPortions.length != 0) {
+      console.log("DID THIS RUN, ", dishPortions.length)
+      setSelectedFood(`${dishPortions[0]['dish']}`);
+      setSelectedPortion(`[1] (${dishPortions[0]['portion']}) sized portion`)
+    }
   }, [dishPortions])
   
+  useEffect(() => {
+    console.log("selectedPortion: ", selectedPortion);
+  },[selectedPortion])
+
   // Changes page w/o re-rendering (reloading)
   const notificationListener = useRef();
   const responseListener = useRef();
@@ -198,6 +207,7 @@ const photoPage = ({navigation}) => {
 
   const [meal, setMeal] = useState('Dinner');
   const [hall, setHall] = useState('Sargent');
+  
   // LIST OF OPTIONS TO CHOOSE FROM, BASED ON MEAL/HALL
   const [items, setItems] = useState([]);
   
@@ -283,8 +293,9 @@ const photoPage = ({navigation}) => {
           <Picker
             style={styles.picker}
             selectedValue={selectedFood}
-            onValueChange={(itemValue, itemIndex) => 
-              setSelectedFood(itemValue)         
+            onValueChange={(itemValue, itemIndex) => {
+              setSelectedFood(itemValue)    
+            }     
             }>
             {items.map(item => {return <Picker.Item key={item.key} label={item.name} value={item.name}/>})}
           </Picker>
@@ -298,7 +309,7 @@ const photoPage = ({navigation}) => {
 
               {Array.from(Array(10).keys()).map(
                 item => {
-                  let myLabel = `[${item}] ` + "(" + dishPortions.find(x => x['dish'] == selectedFood)['portion'] + ")" + " sized portion";
+                  let myLabel = `[${item + 1}] ` + "(" + dishPortions.find(x => x['dish'] == selectedFood)['portion'] + ")" + " sized portion";
                   return  (
                     <Picker.Item key={item} 
                     label={myLabel} 
