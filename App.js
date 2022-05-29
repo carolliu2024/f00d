@@ -55,29 +55,33 @@ export default function App() {
     
 }
 
+let protein = 52;
+let carbs = 41;
+let fat = 37;
+
 const GraphPage = () => {
   return (
     <View>
-      <Text>Your Nutrition Breakdown</Text>
+      <Text style={styles.chartTitle}>Your Nutrition Breakdown</Text>
       <PieChart
         data={[
           {
-            name: 'Protein',
-            population: 21500000,
+            name: 'Protein (g)',
+            population: parseInt(protein),
             color: 'rgba(131, 167, 234, 1)',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
           },
           {
-            name: 'Carbohydrates',
-            population: 2800000,
+            name: 'Carbs (g)',
+            population: parseInt(carbs),
             color: '#F00',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
           },
           {
-            name: 'Fat',
-            population: 8538000,
+            name: 'Fat (g)',
+            population: parseInt(fat),
             color: '#ffffff',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
@@ -435,6 +439,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     alignItems: 'center',
     marginBottom: 10,
+  },
+  chartTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
   reg:{
     fontSize: 20,
