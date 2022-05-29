@@ -2,19 +2,35 @@ import { StatusBar } from 'expo-status-bar';
 import DropDownPicker from 'react-native-dropdown-picker'
 // import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import * as ImagePicker from 'expo-image-picker';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
-// import NativeImagePickerIOS from 'react-native/Libraries/Image/NativeImagePickerIOS';
+import axios from 'axios';
+
+
 
 
 export default function App() {
+
+  const URL = "http://0.0.0.0:5000";
+
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState([]);
-  const [items, setItems] = useState([
-    {label: 'Food1', value: 'f1'},
-    {label: 'Food2', value: 'f2'},
-    {label: 'Food3', value: 'f3'}
-  ]);
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    if (items == []) {
+      console.log("This Ran")
+      axios.get(
+        `${URL}/options?meal=Dinner&hall=Sargent`,
+        {headers: {"Access-Control-Allow-Origin": "*"}}
+        ).then((response) => {
+          console.log(response.data.options);
+        // setItems(response.data.options);
+        });
+    }
+  }, []);
+
+
 
   const options1 = {
     title: 'Take Image',
