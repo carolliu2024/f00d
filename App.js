@@ -36,10 +36,14 @@ export default function App() {
 
   return(
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator initialRouteName='Photo'>
         <Stack.Screen
           name = "Photo"
           component = {photoPage}
+        />
+        <Stack.Screen
+          name = "Graph"
+          component = {graphPage}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -48,8 +52,15 @@ export default function App() {
     
 }
 
+const graphPage = () => {
+  return (
+    <View>
+      <Text>henlo</Text>
+    </View>
+  );
+}
 
-const photoPage = () => {
+const photoPage = ({navigation}) => {
   const [selectedFood, setSelectedFood] = useState();
 
 
@@ -216,6 +227,10 @@ const photoPage = () => {
             <View style={styles.imageContainer}>
               
             </View>
+            <Button
+              title = "Go to next page"
+              onPress={() => navigation.navigate('Graph')}
+            />
     
             <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
     
