@@ -128,11 +128,19 @@ const PhotoPage = ({navigation}) => {
 
   useEffect(() => {
     axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`,       
-    {headers: {"Access-Control-Allow-Origin": "*"}}
+    {headers: {"Access-Control-Allow-Origin": "*"}, data: undefined}
     ).then(response => {
       setDishPortions(response.data.data);
+      console.log("SUCCESS DISH PORTIONS: ", response.data.data);
+    }).catch((error) => {
+      console.log("DISH PORTIONS FAILED: ");
+      console.log(error);
     })
   }, [])
+
+  useEffect(() => {
+    console.log("DISH PORTIONS UPDATED: ", dishPortions);
+  }, [dishPortions])
 
   useEffect(() => {
     console.log("dishPortions: ", dishPortions)
@@ -143,9 +151,6 @@ const PhotoPage = ({navigation}) => {
     }
   }, [dishPortions])
   
-  useEffect(() => {
-    console.log("selectedPortion: ", selectedPortion);
-  },[selectedPortion])
 
   // Changes page w/o re-rendering (reloading)
   const notificationListener = useRef();
@@ -225,22 +230,60 @@ const PhotoPage = ({navigation}) => {
   
   // LIST OF OPTIONS TO CHOOSE FROM, BASED ON MEAL/HALL
   const [items, setItems] = useState([]);
+
+  function parsePortion(portion) {
+    return portion.split(' ')[0].slice(1, -1)
+  }
+
+  function aggregatePortions() {
+    axios.get(`${URL}/nutrients?meal=${meal}&hall=${hall}`,
+    {
+      headers: {"Access-Control-Allow-Origin": "*"},      
+      data: undefined
+    }
+    ).then((response) => {
+      return response.data.data;
+    })
+  }
+
+
+
+  useEffect(() => {
+    console.log("DOES THIS SHIT WOKR", parsePortion('[1] (1/2 cup) sized portion'));
+    // console.log("DTSW: ", aggregatePortions());
+  }, [])
   
   // LOGIC FOR PICKER
   useEffect(() => {
-    console.log("This Ran")
     axios.get(
       `${URL}/options?meal=${meal}&hall=${hall}`,
-      {headers: {"Access-Control-Allow-Origin": "*"}}
+      {
+        headers: {"Access-Control-Allow-Origin": "*"},      
+        data: undefined
+      },
+
       ).then((response) => {
         setItems(response.data.options);
-      });
+        console.log("SUCCESS MEAL OPTIONS: ", response.data.options);
+      }).catch((error) => {
+        console.log("MEAL OPTION FAILED: ");
+        console.log(error.response);
+      })
   }, [meal, hall]);
 
   useEffect(()=> {
     console.log("Items: ", items);
   }, [items])
 
+
+  useEffect(() => {
+    axios.get(`${URL}/all?meal=${meal}&hall=${hall}`, {
+      headers: {"Access-Control-Allow-Origin": "*"},
+      data: undefined      
+    }).then(response => {
+      return response.data.data;
+    })
+  }, [])
 
 
   // REFACTOR SOMEWHERE
@@ -399,7 +442,7 @@ async function sendPushNotification(expoPushToken, text, address) {
     data: { someData: 'goes here' },
   };
 
-  await fetch('https://exp.host/--/api/v2/push/send', {
+  await fetch('http://exp.host/--/api/v2/push/send', {
     method: 'POST',
     headers: {
       Accept: 'application/json',
