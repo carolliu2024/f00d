@@ -7,5 +7,7 @@
       "**/*"
     ]
   },
-  "name": "my-project"
+  "name": "my-project",
+  "notification.vapidPublicKey": 
+
 }
