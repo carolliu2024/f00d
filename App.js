@@ -10,7 +10,8 @@ import axios from 'axios';
 
 
 import React, {useState, useEffect, useRef} from 'react';
-import { StyleSheet, Text, View, Button, Image, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, Button, Image, Dimensions, ScrollView, FlatList} from 'react-native';
+// import {ScrollView} from 'react-native-gesture-handler';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import {PieChart} from 'react-native-chart-kit';
@@ -146,7 +147,7 @@ const PhotoPage = ({navigation}) => {
 
   // TODO: REFACTOR THIS INTO LOCATION & NOTIFICATION CODE
   useEffect(() => {
-    console.log('running :D');
+    // console.log('running :D');
     if (Device.brand != null) {
       registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
@@ -186,9 +187,7 @@ const PhotoPage = ({navigation}) => {
         setLocation(location);
         setWhere(address);
         // console.log(where);
-        // console.log("ADDWESS PWS",);
         // console.log(address)
-        // console.log('wunning? > <');
         sendPushNotification(expoPushToken, text, address);
       })();
       
@@ -322,38 +321,39 @@ const PhotoPage = ({navigation}) => {
   });
 
   return (
-    <View style = {styles.container}>
-        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
-        { DishSelect }
+      <View style = {styles.container}>
+          <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+          { DishSelect }
 
-        <Button
-            title = "Add food"
-            onPress={() => addRow()}
-        />
+          <Button
+              title = "Add food"
+              onPress={() => addRow()}
+          />
+              
+          <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+          <StatusBar style="auto" />
+          <Button
+                title = "Go to next page"
+                onPress={() => navigation.navigate('Graph')}
+          />
+          <View style={styles.nextButton}></View>
+          <Button
+              title = "Select from Image Gallery"
+              onPress = {pickImage}
+          />
+          <View style={styles.imageContainer}>
             
-        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-        <StatusBar style="auto" />
-        <Button
-              title = "Go to next page"
-              onPress={() => navigation.navigate('Graph')}
-        />
-        <View style={styles.nextButton}></View>
-        <Button
-            title = "Select from Image Gallery"
-            onPress = {pickImage}
-        />
-        <View style={styles.imageContainer}>
-          
-        </View>
-        <View style = {styles.imgBox}>
-          {
-            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
-              <Image
-              source={{ uri: pickedImagePath }}
-              style={styles.image}
-            />
-          }
-        </View>
+          </View>
+          <View style = {styles.imgBox}>
+            {
+              pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+                <Image
+                source={{ uri: pickedImagePath }}
+                style={styles.image}
+              />
+            }
+          </View>
+        
       </View>
   );
 
@@ -420,7 +420,8 @@ async function registerForPushNotificationsAsync() {
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    // flex: 1,
   },
   entry: {
     width: '70%',
@@ -438,6 +439,7 @@ const styles = StyleSheet.create({
   reg:{
     fontSize: 20,
     textAlign: 'center',
+    marginBottom: 10,
   },
   imgBox: {
     width: '80%',
@@ -464,7 +466,8 @@ const styles = StyleSheet.create({
 
   nextButton: {
     marginBottom: 20,
-  }
+  },
+
 });
 
 // export default App;
