@@ -10,7 +10,8 @@ import axios from 'axios';
 
 
 import React, {useState, useEffect, useRef} from 'react';
-import { StyleSheet, Text, View, Button, Image, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, Button, Image, Dimensions, ScrollView, FlatList} from 'react-native';
+// import {ScrollView} from 'react-native-gesture-handler';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import {PieChart} from 'react-native-chart-kit';
@@ -41,11 +42,11 @@ export default function App() {
       <Stack.Navigator initialRouteName='Photo'>
         <Stack.Screen
           name = "Photo"
-          component = {photoPage}
+          component = {PhotoPage}
         />
         <Stack.Screen
           name = "Graph"
-          component = {graphPage}
+          component = {GraphPage}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -54,29 +55,33 @@ export default function App() {
     
 }
 
-const graphPage = () => {
+let protein = 52;
+let carbs = 41;
+let fat = 37;
+
+const GraphPage = () => {
   return (
     <View>
-      <Text>Your Nutrition Breakdown</Text>
+      <Text style={styles.chartTitle}>Your Nutrition Breakdown</Text>
       <PieChart
         data={[
           {
-            name: 'Protein',
-            population: 21500000,
+            name: 'Protein (g)',
+            population: parseInt(protein),
             color: 'rgba(131, 167, 234, 1)',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
           },
           {
-            name: 'Carbohydrates',
-            population: 2800000,
+            name: 'Carbs (g)',
+            population: parseInt(carbs),
             color: '#F00',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
           },
           {
-            name: 'Fat',
-            population: 8538000,
+            name: 'Fat (g)',
+            population: parseInt(fat),
             color: '#ffffff',
             legendFontColor: '#7F7F7F',
             legendFontSize: 15,
@@ -107,7 +112,7 @@ const graphPage = () => {
   );
 }
 
-const photoPage = ({navigation}) => {
+const PhotoPage = ({navigation}) => {
   const [selectedFood, setSelectedFood] = useState();
   const [selectedPortion, setSelectedPortion] = useState();
   const URL = "http://0.0.0.0:5000";
@@ -118,6 +123,8 @@ const photoPage = ({navigation}) => {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const [dishPortions, setDishPortions] = useState([]);
+
+  const [rows, setRows] = useState([1]);
 
   useEffect(() => {
     axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`).then(response => {
@@ -144,6 +151,7 @@ const photoPage = ({navigation}) => {
 
   // TODO: REFACTOR THIS INTO LOCATION & NOTIFICATION CODE
   useEffect(() => {
+    // console.log('running :D');
     if (Device.brand != null) {
       registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
@@ -182,11 +190,16 @@ const photoPage = ({navigation}) => {
         // console.log("Address: ", address);
         setLocation(location);
         setWhere(address);
+        // console.log(where);
+        // console.log(address)
+        sendPushNotification(expoPushToken, text, address);
       })();
+      
 
       return () => {
         Notifications.removeNotificationSubscription(notificationListener.current);
         Notifications.removeNotificationSubscription(responseListener.current);
+        
       };
     }
    
@@ -264,32 +277,14 @@ const photoPage = ({navigation}) => {
     }
   };
 
-  return (
-    <View style = {styles.container}>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'space-around',
-            }}>
-            <Button
-              title="Press to Send Notification"
-              onPress={async () => {
-                await sendPushNotification(expoPushToken, text, address);
-              }}
-            />
-        </View>
-        <Button
-          title = "Select from Image Gallery"
-          onPress = {pickImage}
-        />
-        <View style={styles.imageContainer}>
-          
-        </View>
+  function addRow() {
+    rows.push(rows.length + 1);
+    setRows([...rows]);
+  }
 
-        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
-
-        <View style={styles.entry}>
+  const DishSelect = rows.map((r, i) => {
+    return (
+      <View key={i} style={styles.entry}>
           <Text>Pick Dish:</Text>
           <Picker
             style={styles.picker}
@@ -326,29 +321,43 @@ const photoPage = ({navigation}) => {
            null }
           
         </View>
-            
-        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-        <StatusBar style="auto" />
-        <Button
-              title = "Go to next page"
-              onPress={() => navigation.navigate('Graph')}
-            />
+    );
+  });
+
+  return (
+      <View style = {styles.container}>
+          <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+          { DishSelect }
+
+          <Button
+              title = "Add food"
+              onPress={() => addRow()}
+          />
+              
+          <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+          <StatusBar style="auto" />
+          <Button
+                title = "Go to next page"
+                onPress={() => navigation.navigate('Graph')}
+          />
+          <View style={styles.nextButton}></View>
           <Button
               title = "Select from Image Gallery"
               onPress = {pickImage}
-            />
-            <View style={styles.imageContainer}>
-              
-            </View>
-            <View style = {styles.imgBox}>
-              {
-                pickedImagePath == '' ? <Text>Upload your image here!</Text>:
-                 <Image
-                  source={{ uri: pickedImagePath }}
-                  style={styles.image}
-                />
-              }
-            </View>
+          />
+          <View style={styles.imageContainer}>
+            
+          </View>
+          <View style = {styles.imgBox}>
+            {
+              pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+                <Image
+                source={{ uri: pickedImagePath }}
+                style={styles.image}
+              />
+            }
+          </View>
+        
       </View>
   );
 
@@ -366,7 +375,7 @@ async function sendPushNotification(expoPushToken, text, address) {
     to: expoPushToken,
     sound: 'default',
     title: 'f00d',
-    body: `Address: ${address}. Are you eating at ${text}?`,
+    body: `Are you eating at ${address[0].streetNumber} ${address[0].street}?`,
     data: { someData: 'goes here' },
   };
 
@@ -415,7 +424,8 @@ async function registerForPushNotificationsAsync() {
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    // flex: 1,
   },
   entry: {
     width: '70%',
@@ -430,13 +440,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  chartTitle: {
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
   reg:{
     fontSize: 20,
     textAlign: 'center',
+    marginBottom: 10,
   },
   imgBox: {
     width: '80%',
-    height: '10%',
+    height: '40%',
     alignItems: 'center',
     backgroundColor: '#d4d4d4',
     justifyContent: 'center',
@@ -455,7 +471,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '50%',
-  }
+  },
+
+  nextButton: {
+    marginBottom: 20,
+  },
+
 });
 
 // export default App;
