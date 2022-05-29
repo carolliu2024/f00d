@@ -25,9 +25,9 @@ Notifications.setNotificationHandler({
 
 export default function App() {
 
+  // REALLY ALL STATE VARS SHOULD BE AT THE TOP
   const [selectedFood, setSelectedFood] = useState();
-
-
+  const [selectedPortion, setSelectedPortion] = useState();
   const URL = "http://0.0.0.0:5000";
   const [location, setLocation] = useState(null);
   const [where, setWhere] = useState(null);
@@ -35,10 +35,23 @@ export default function App() {
 
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
+  const [dishPortions, setDishPortions] = useState([]);
+
+  useEffect(() => {
+    axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`).then(response => {
+      setDishPortions(response.data.data);
+    })
+  }, [])
+
+  useEffect(() => {
+    console.log("dishPortions: ", dishPortions)
+  }, [dishPortions])
+  
   // Changes page w/o re-rendering (reloading)
   const notificationListener = useRef();
   const responseListener = useRef();
 
+  // TODO: REFACTOR THIS INTO LOCATION & NOTIFICATION CODE
   useEffect(() => {
     if (Device.brand != null) {
       registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
@@ -76,13 +89,10 @@ export default function App() {
           latitude,longitude
         })
         // console.log("Address: ", address);
-        
-  
         setLocation(location);
         setWhere(address);
-        
       })();
-  
+
       return () => {
         Notifications.removeNotificationSubscription(notificationListener.current);
         Notifications.removeNotificationSubscription(responseListener.current);
@@ -91,6 +101,7 @@ export default function App() {
    
   }, []);
 
+  // TODO: WHY ARE THESE AT THE GLOBAL LEVEL? REFACTOR WHERE POSSIBLE
   let text = 'Waiting..';
   let address = 'waiting.';
   if (errorMsg) {
@@ -102,24 +113,31 @@ export default function App() {
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState([]);
-  const [items, setItems] = useState([]);
 
+  const [meal, setMeal] = useState('Dinner');
+  const [hall, setHall] = useState('Sargent');
+  // LIST OF OPTIONS TO CHOOSE FROM, BASED ON MEAL/HALL
+  const [items, setItems] = useState([]);
+  
+  // LOGIC FOR PICKER
   useEffect(() => {
     console.log("This Ran")
     axios.get(
-      `${URL}/options?meal=Dinner&hall=Sargent`,
+      `${URL}/options?meal=${meal}&hall=${hall}`,
       {headers: {"Access-Control-Allow-Origin": "*"}}
       ).then((response) => {
         setItems(response.data.options);
       });
-  }, []);
+  }, [meal, hall]);
 
   useEffect(()=> {
     console.log("Items: ", items);
   }, [items])
 
-  const [pickedImagePath, setPickedImagePath] = useState('');
 
+
+  // REFACTOR SOMEWHERE
+  const [pickedImagePath, setPickedImagePath] = useState('');
   const options1 = {
     title: 'Take Image',
     options: {
@@ -127,7 +145,6 @@ export default function App() {
       mediaType: 'photo',
     },
   };
-
   const options2 = {
       title: 'Select Image',
       options: {
@@ -137,7 +154,6 @@ export default function App() {
         mediaType: 'photo',
       },
   };
-
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -195,25 +211,38 @@ export default function App() {
 
         <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
 
-        <DropDownPicker
-          open = {open}
-          items={items}
-          value = {value}
-          setOpen = {setOpen}
-          setItems={setItems}
-          setValue = {setValue}
-          // containerStyle={{height: 40}}
-          // defaultIndex={0}
-          multiple = {true}
-        />
+        <View style={styles.entry}>
+          <Picker
+            style={styles.picker}
+            selectedValue={selectedFood}
+            onValueChange={(itemValue, itemIndex) => 
+              setSelectedFood(itemValue)         
+            }>
+            {items.map(item => {return <Picker.Item key={item.key} label={item.name} value={item.name}/>})}
+          </Picker>
+          {selectedFood ?
+              <Picker
+              style={styles.picker}
+              selectedValue={selectedPortion}
+              onValueChange={async (itemValue, itemIndex) =>
+                setSelectedPortion(itemValue)
+              }>
 
-        <Picker
-          selectedValue={selectedFood}
-          onValueChange={(itemValue, itemIndex) =>
-            setSelectedFood(itemValue)
-          }>
-          {items.map(item => {return <Picker.Item label={item.name} value={item.name}/>})}
-        </Picker>
+              {Array.from(Array(10).keys()).map(
+                item => {
+                  let myLabel = `[${item}] ` + "(" + dishPortions.find(x => x['dish'] == selectedFood)['portion'] + ")" + " sized portion";
+                  return  (
+                    <Picker.Item key={item} 
+                    label={myLabel} 
+                    value={myLabel}/>
+                    )
+                })}
+              </Picker>
+           : 
+           null }
+          
+        </View>
+        
 
 
       </View>
@@ -273,21 +302,20 @@ async function registerForPushNotificationsAsync() {
   return token;
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  entry: {
+    width: '70%',
+    justifyContent: 'space-between',
   },
   title: {
     textAlign: 'center',
     fontSize: 20,
     fontWeight: 'bold',
     alignItems: 'center',
-    // textAlign: 'center',
-    marginTop: 50,
     marginBottom: 10,
   },
   reg:{
@@ -296,12 +324,11 @@ const styles = StyleSheet.create({
   },
   imgBox: {
     width: '80%',
-    height: '30%',
+    height: '10%',
     alignItems: 'center',
     backgroundColor: '#d4d4d4',
     justifyContent: 'center',
     borderRadius: 10,
-    marginTop: 10,
     marginBottom: 10,
     
   },
@@ -310,6 +337,13 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover'
   },
+
+  picker: {
+    margin: '0 auto',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+  }
 });
 
 // export default App;
