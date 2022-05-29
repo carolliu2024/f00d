@@ -131,21 +131,15 @@ const PhotoPage = ({navigation}) => {
     {headers: {"Access-Control-Allow-Origin": "*"}, data: undefined}
     ).then(response => {
       setDishPortions(response.data.data);
-      console.log("SUCCESS DISH PORTIONS: ", response.data.data);
     }).catch((error) => {
       console.log("DISH PORTIONS FAILED: ");
       console.log(error);
     })
   }, [])
 
-  useEffect(() => {
-    console.log("DISH PORTIONS UPDATED: ", dishPortions);
-  }, [dishPortions])
 
   useEffect(() => {
-    console.log("dishPortions: ", dishPortions)
     if (dishPortions.length != 0) {
-      console.log("DID THIS RUN, ", dishPortions.length)
       setSelectedFood(`${dishPortions[0]['dish']}`);
       setSelectedPortion(`[1] (${dishPortions[0]['portion']}) sized portion`)
     }
@@ -235,22 +229,22 @@ const PhotoPage = ({navigation}) => {
     return portion.split(' ')[0].slice(1, -1)
   }
 
-  function aggregatePortions() {
-    axios.get(`${URL}/nutrients?meal=${meal}&hall=${hall}`,
-    {
-      headers: {"Access-Control-Allow-Origin": "*"},      
-      data: undefined
-    }
-    ).then((response) => {
-      return response.data.data;
-    })
-  }
 
+
+  // useEffect(() => {
+  //   axios.get(`${URL}/nutrients?meal=${meal}&hall=${hall}`,
+  //   {
+  //     headers: {"Access-Control-Allow-Origin": "*"},      
+  //     data: undefined
+  //   }
+  //   ).then(response => {
+  //     console.log(response.data.data);
+  //   })
+  // }, [])
 
 
   useEffect(() => {
     console.log("DOES THIS SHIT WOKR", parsePortion('[1] (1/2 cup) sized portion'));
-    // console.log("DTSW: ", aggregatePortions());
   }, [])
   
   // LOGIC FOR PICKER
@@ -271,19 +265,36 @@ const PhotoPage = ({navigation}) => {
       })
   }, [meal, hall]);
 
-  useEffect(()=> {
-    console.log("Items: ", items);
-  }, [items])
+
 
 
   useEffect(() => {
+    console.log("PICKED DISHES FOR UR REF: " , pickedDishes);
+
+    if (pickedDishes[0]['selectedPortion'] != "") {
+    console.log("DID THIS SHIT NOT RUN!?!?!?!")
     axios.get(`${URL}/all?meal=${meal}&hall=${hall}`, {
       headers: {"Access-Control-Allow-Origin": "*"},
       data: undefined      
     }).then(response => {
+      // for (var i = 0; i < response.data.data['nutrients'].length; i++) {
+      //   console.log(response.data.data['nutrients'][i]['name']);
+      // }
+      const keyStuff = eval(response.data.data['nutrients'][0]).map(thing => { return thing['name']});
+      console.log(pickedDishes);
+
+      console.log(parsePortion(pickedDishes[0]['selectedPortion']));
+
+      console.log("KEY STUFF: ", keyStuff);
+      console.log("HELLO!?!?!:", response.data.data);
       return response.data.data;
     })
-  }, [])
+  } else {
+
+    console.log("NONONON: ", pickedDishes[0]['selectedPortion']);
+  }
+    
+  }, [pickedDishes])
 
 
   // REFACTOR SOMEWHERE
@@ -326,7 +337,7 @@ const PhotoPage = ({navigation}) => {
     setPickedDishes([...pickedDishes, {selectedFood: "", selectedPortion: ""}]);
   }
 
-  const [pickedDishes, setPickedDishes] = useState([]);
+  const [pickedDishes, setPickedDishes] = useState([{selectedFood: "", selectedPortion: ""}]);
 
   // I could have a big array of objects, I could have an id for each of my dish pickers,
   // In the big array I could have "1": {selectedFood, selectedPortion}
@@ -334,9 +345,7 @@ const PhotoPage = ({navigation}) => {
   // For each onChange, I can just call useState([... pickedDishes, "1": {... selectedPortion: newVal}])
 
   const DishPicker = ({id}) => {
-    useEffect(() => {
-      console.log(`DishPicker ${id}, this is the value: ${pickedDishes[[id]]}`)
-    },[])
+
     return (
       <View style={styles.entry}>
       <Text>Pick Dish:</Text>
@@ -381,9 +390,8 @@ const PhotoPage = ({navigation}) => {
   }
 
   const DishSelect = pickedDishes.map((row, index) => {
-    console.log("Index: ", index);
     return (
-      <DishPicker id={index} key={index}/>
+      <DishPicker id={index} key={index} setPickedDishes={setPickedDishes} pickedDishes={pickedDishes}/>
     );
   });
 
