@@ -290,6 +290,7 @@ const photoPage = ({navigation}) => {
         <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
 
         <View style={styles.entry}>
+          <Text>Pick Dish:</Text>
           <Picker
             style={styles.picker}
             selectedValue={selectedFood}
@@ -300,6 +301,8 @@ const photoPage = ({navigation}) => {
             {items.map(item => {return <Picker.Item key={item.key} label={item.name} value={item.name}/>})}
           </Picker>
           {selectedFood ?
+              <>
+              <Text>Eyeball Portion Size: </Text>
               <Picker
               style={styles.picker}
               selectedValue={selectedPortion}
@@ -317,6 +320,8 @@ const photoPage = ({navigation}) => {
                     )
                 })}
               </Picker>
+              </>
+              
            : 
            null }
           
@@ -415,6 +420,8 @@ const styles = StyleSheet.create({
   entry: {
     width: '70%',
     justifyContent: 'space-between',
+    flexDirection: 'row',
+    flexWrap: 'nowrap'
   },
   title: {
     textAlign: 'center',
@@ -444,7 +451,7 @@ const styles = StyleSheet.create({
   },
 
   picker: {
-    margin: '0 auto',
+    marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
     width: '50%',
