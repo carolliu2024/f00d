@@ -124,10 +124,12 @@ const PhotoPage = ({navigation}) => {
   const [notification, setNotification] = useState(false);
   const [dishPortions, setDishPortions] = useState([]);
 
-  const [rows, setRows] = useState([1]);
+  const [rows, setRows] = useState([{selectedFood: "", selectedPortion: ""}]);
 
   useEffect(() => {
-    axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`).then(response => {
+    axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`,       
+    {headers: {"Access-Control-Allow-Origin": "*"}}
+    ).then(response => {
       setDishPortions(response.data.data);
     })
   }, [])
@@ -277,61 +279,79 @@ const PhotoPage = ({navigation}) => {
     }
   };
 
-  function addRow() {
-    rows.push(rows.length + 1);
-    setRows([...rows]);
+  function addPickedDish() {
+    setPickedDishes([...pickedDishes, {selectedFood: "", selectedPortion: ""}]);
   }
 
-  const DishSelect = rows.map((r, i) => {
-    return (
-      <View key={i} style={styles.entry}>
-          <Text>Pick Dish:</Text>
-          <Picker
-            style={styles.picker}
-            selectedValue={selectedFood}
-            onValueChange={(itemValue, itemIndex) => {
-              setSelectedFood(itemValue)    
-            }     
-            }>
-            {items.map(item => {return <Picker.Item key={item.key} label={item.name} value={item.name}/>})}
-          </Picker>
-          {selectedFood ?
-              <>
-              <Text>Eyeball Portion Size: </Text>
-              <Picker
-              style={styles.picker}
-              selectedValue={selectedPortion}
-              onValueChange={async (itemValue, itemIndex) =>
-                setSelectedPortion(itemValue)
-              }>
+  const [pickedDishes, setPickedDishes] = useState([]);
 
-              {Array.from(Array(10).keys()).map(
-                item => {
-                  let myLabel = `[${item + 1}] ` + "(" + dishPortions.find(x => x['dish'] == selectedFood)['portion'] + ")" + " sized portion";
-                  return  (
-                    <Picker.Item key={item} 
-                    label={myLabel} 
-                    value={myLabel}/>
-                    )
-                })}
-              </Picker>
-              </>
-              
-           : 
-           null }
+  // I could have a big array of objects, I could have an id for each of my dish pickers,
+  // In the big array I could have "1": {selectedFood, selectedPortion}
+
+  // For each onChange, I can just call useState([... pickedDishes, "1": {... selectedPortion: newVal}])
+
+  const DishPicker = ({id}) => {
+    useEffect(() => {
+      console.log(`DishPicker ${id}, this is the value: ${pickedDishes[[id]]}`)
+    },[])
+    return (
+      <View style={styles.entry}>
+      <Text>Pick Dish:</Text>
+      <Picker
+        style={styles.picker}
+        selectedValue={pickedDishes[[id]]['selectedFood']}
+        onValueChange={(itemValue, itemIndex) => {
+          // aray of pickedDishes need to change index <KEY>
+          let newPortion = `[1] (${dishPortions.find(x => x['dish'] == itemValue)['portion']}) sized portion`;
+          setPickedDishes(Object.assign([], pickedDishes, {[id]: {selectedFood: itemValue, selectedPortion: newPortion}}))    
+        }     
+        }>
+        {items.map(item => {return <Picker.Item key={item.key} label={item.name} value={item.name}/>})}
+      </Picker>
+      {selectedFood ?
+          <>
+          <Text>Eyeball Portion Size: </Text>
+          <Picker
+          style={styles.picker}
+          selectedValue={pickedDishes[[id]]['selectedPortion']}
+          onValueChange={async (itemValue, itemIndex) =>
+            setPickedDishes(Object.assign([], pickedDishes, {[id]: {selectedFood: pickedDishes[[id]]['selectedFood'], selectedPortion: itemValue}}))    
+          }>
+
+          {Array.from(Array(10).keys()).map(
+            item => {
+              let myLabel = `[${item + 1}] ` + "(" + dishPortions.find(x => x['dish'] == selectedFood)['portion'] + ")" + " sized portion";
+              return  (
+                <Picker.Item key={item} 
+                label={myLabel} 
+                value={myLabel}/>
+                )
+            })}
+          </Picker>
+          </>
           
-        </View>
+       : 
+       null }
+      
+    </View>
+    )
+  }
+
+  const DishSelect = pickedDishes.map((row, index) => {
+    console.log("Index: ", index);
+    return (
+      <DishPicker id={index} key={index}/>
     );
   });
 
   return (
       <View style = {styles.container}>
           <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
-          { DishSelect }
+          { DishSelect } 
 
           <Button
               title = "Add food"
-              onPress={() => addRow()}
+              onPress={() => addPickedDish()}
           />
               
           <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
