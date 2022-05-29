@@ -1,17 +1,99 @@
 import { StatusBar } from 'expo-status-bar';
 import DropDownPicker from 'react-native-dropdown-picker'
-// import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+
 import * as ImagePicker from 'expo-image-picker';
 import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import axios from 'axios';
 
 
+import React, {useState, useEffect, useRef} from 'react';
+import { StyleSheet, Text, View, Button, Image } from 'react-native';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 
+import * as Location from 'expo-location';
+
+// import NativeImagePickerIOS from 'react-native/Libraries/Image/NativeImagePickerIOS';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function App() {
 
   const URL = "http://0.0.0.0:5000";
+  const [location, setLocation] = useState(null);
+  const [where, setWhere] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  const [expoPushToken, setExpoPushToken] = useState('');
+  const [notification, setNotification] = useState(false);
+  // Changes page w/o re-rendering (reloading)
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
+  useEffect(() => {
+    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+
+    // This listener is fired whenever a notification is received while the app is foregrounded
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      setNotification(notification);
+    });
+
+    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log(response);
+    });
+    
+    // Define function and call instantly
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync();
+      let {coords} = await Location.getCurrentPositionAsync();
+      // let lat = location.coords.latitude;
+      // let lon = location.coords.longitude;
+      // console.log("what even is lat: ",typeof(lat))
+      // let sarge = await Location.geocodeAsync("Sargent Hall")
+
+      // const {latitude, longitude} = location;
+      // console.log("Longitude:",location.coords.longitude);
+      // let coords = location.coords;
+      const {latitude, longitude} = coords;
+      address = await Location.reverseGeocodeAsync({
+        latitude,longitude
+      })
+      // console.log("Address: ", address);
+      
+
+      setLocation(location);
+      setWhere(address);
+      
+    })();
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
+    };
+  }, []);
+
+  let text = 'Waiting..';
+  let address = 'waiting.';
+  if (errorMsg) {
+    text = errorMsg;
+  } else if (location) {
+    text = JSON.stringify(location);
+    address = JSON.stringify(where)
+  }
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState([]);
@@ -31,6 +113,8 @@ export default function App() {
   }, []);
 
 
+
+  const [pickedImagePath, setPickedImagePath] = useState('');
 
   const options1 = {
     title: 'Take Image',
@@ -62,39 +146,119 @@ export default function App() {
     console.log(result);
 
     if (!result.cancelled) {
-      setImage(result.uri);
+      // setImage(result.uri);
+      setPickedImagePath(result.uri);
+      console.log(result.uri);
     }
   };
 
   return(
-    <View style={styles.container}>
-    <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-    <StatusBar style="auto" />
+    
+    <View style = {styles.container}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'space-around',
+        }}>
+        <Button
+          title="Press to Send Notification"
+          onPress={async () => {
+            await sendPushNotification(expoPushToken, text, address);
+          }}
+        />
+      </View>
 
-    <View style = {styles.imgBox}>
-      <Text>Upload your image here!</Text>
-    </View>
-    <Button
-      title = "Select from Image Gallery"
-      onPress = {pickImage}
-    />
+        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+        <StatusBar style="auto" />
 
-    <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+        <View style = {styles.imgBox}>
+          {
+            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+             <Image
+              source={{ uri: pickedImagePath }}
+              style={styles.image}
+            />
+          }
+        </View>
+        <Button
+          title = "Select from Image Gallery"
+          onPress = {pickImage}
+        />
+        <View style={styles.imageContainer}>
+          
+        </View>
 
-    <DropDownPicker
-      open = {open}
-      items={items}
-      value = {value}
-      setOpen = {setOpen}
-      setItems={setItems}
-      setValue = {setValue}
-      // containerStyle={{height: 40}}
-      // defaultIndex={0}
-      multiple = {true}
-    />
-  </View>
+        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+
+        <DropDownPicker
+          open = {open}
+          items={items}
+          value = {value}
+          setOpen = {setOpen}
+          setItems={setItems}
+          setValue = {setValue}
+          // containerStyle={{height: 40}}
+          // defaultIndex={0}
+          multiple = {true}
+        />
+
+
+      </View>
   );
     
+}
+
+// Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
+async function sendPushNotification(expoPushToken, text, address) {
+  const message = {
+    to: expoPushToken,
+    sound: 'default',
+    title: 'f00d',
+    body: `Address: ${address}. Are you eating at ${text}?`,
+    data: { someData: 'goes here' },
+  };
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Accept-encoding': 'gzip, deflate',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(message),
+  });
+}
+
+async function registerForPushNotificationsAsync() {
+  let token;
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log(token);
+  } else {
+    alert('Must use physical device for Push Notifications');
+  }
+
+  if (Platform.OS === 'android') {
+    Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  return token;
 }
 
 
@@ -128,7 +292,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     
-  }
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover'
+  },
 });
 
 // export default App;
