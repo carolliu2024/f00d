@@ -2,6 +2,9 @@ import { StatusBar } from 'expo-status-bar';
 import DropDownPicker from 'react-native-dropdown-picker'
 
 import * as ImagePicker from 'expo-image-picker';
+
+import {Picker} from '@react-native-picker/picker';
+
 import axios from 'axios';
 
 
@@ -12,8 +15,6 @@ import * as Notifications from 'expo-notifications';
 
 import * as Location from 'expo-location';
 
-// import NativeImagePickerIOS from 'react-native/Libraries/Image/NativeImagePickerIOS';
-
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -23,6 +24,9 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+
+  const [selectedFood, setSelectedFood] = useState();
+
 
   const URL = "http://0.0.0.0:5000";
   const [location, setLocation] = useState(null);
@@ -36,52 +40,55 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
+    if (Device.brand != null) {
+      registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
-    // This listener is fired whenever a notification is received while the app is foregrounded
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      setNotification(notification);
-    });
-
-    // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log(response);
-    });
-    
-    // Define function and call instantly
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        return;
-      }
-
-      let location = await Location.getCurrentPositionAsync();
-      let {coords} = await Location.getCurrentPositionAsync();
-      // let lat = location.coords.latitude;
-      // let lon = location.coords.longitude;
-      // console.log("what even is lat: ",typeof(lat))
-      // let sarge = await Location.geocodeAsync("Sargent Hall")
-
-      // const {latitude, longitude} = location;
-      // console.log("Longitude:",location.coords.longitude);
-      // let coords = location.coords;
-      const {latitude, longitude} = coords;
-      address = await Location.reverseGeocodeAsync({
-        latitude,longitude
-      })
-      // console.log("Address: ", address);
+      // This listener is fired whenever a notification is received while the app is foregrounded
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        setNotification(notification);
+      });
+  
+      // This listener is fired whenever a user taps on or interacts with a notification (works when app is foregrounded, backgrounded, or killed)
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        console.log(response);
+      });
       
-
-      setLocation(location);
-      setWhere(address);
-      
-    })();
-
-    return () => {
-      Notifications.removeNotificationSubscription(notificationListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
-    };
+      // Define function and call instantly
+      (async () => {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission to access location was denied');
+          return;
+        }
+  
+        let location = await Location.getCurrentPositionAsync();
+        let {coords} = await Location.getCurrentPositionAsync();
+        // let lat = location.coords.latitude;
+        // let lon = location.coords.longitude;
+        // console.log("what even is lat: ",typeof(lat))
+        // let sarge = await Location.geocodeAsync("Sargent Hall")
+  
+        // const {latitude, longitude} = location;
+        // console.log("Longitude:",location.coords.longitude);
+        // let coords = location.coords;
+        const {latitude, longitude} = coords;
+        address = await Location.reverseGeocodeAsync({
+          latitude,longitude
+        })
+        // console.log("Address: ", address);
+        
+  
+        setLocation(location);
+        setWhere(address);
+        
+      })();
+  
+      return () => {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+        Notifications.removeNotificationSubscription(responseListener.current);
+      };
+    }
+   
   }, []);
 
   let text = 'Waiting..';
@@ -199,6 +206,14 @@ export default function App() {
           // defaultIndex={0}
           multiple = {true}
         />
+
+        <Picker
+          selectedValue={selectedFood}
+          onValueChange={(itemValue, itemIndex) =>
+            setSelectedFood(itemValue)
+          }>
+          {items.map(item => {return <Picker.Item label={item.name} value={item.name}/>})}
+        </Picker>
 
 
       </View>
