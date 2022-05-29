@@ -264,32 +264,10 @@ const photoPage = ({navigation}) => {
     }
   };
 
-  return (
-    <View style = {styles.container}>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'space-around',
-            }}>
-            <Button
-              title="Press to Send Notification"
-              onPress={async () => {
-                await sendPushNotification(expoPushToken, text, address);
-              }}
-            />
-        </View>
-        <Button
-          title = "Select from Image Gallery"
-          onPress = {pickImage}
-        />
-        <View style={styles.imageContainer}>
-          
-        </View>
-
-        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
-
-        <View style={styles.entry}>
+  let rows = [1,2,3];
+  const DishSelect = rows.map((r, i) => {
+    return (
+      <View key={i} style={styles.entry}>
           <Text>Pick Dish:</Text>
           <Picker
             style={styles.picker}
@@ -326,6 +304,28 @@ const photoPage = ({navigation}) => {
            null }
           
         </View>
+    );
+  });
+
+  return (
+    <View style = {styles.container}>
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'space-around',
+            }}>
+        </View>
+        <Button
+          title = "Select from Image Gallery"
+          onPress = {pickImage}
+        />
+        <View style={styles.imageContainer}>
+          
+        </View>
+
+        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+        { DishSelect }
             
         <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
         <StatusBar style="auto" />
