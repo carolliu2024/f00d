@@ -4,16 +4,19 @@ import DropDownPicker from 'react-native-dropdown-picker'
 import * as ImagePicker from 'expo-image-picker';
 
 import {Picker} from '@react-native-picker/picker';
+import { NavigationContainer, StackActions } from '@react-navigation/native';
 
 import axios from 'axios';
 
 
 import React, {useState, useEffect, useRef} from 'react';
-import { StyleSheet, Text, View, Button, Image } from 'react-native';
+import { StyleSheet, Text, View, Button, Image, Dimensions } from 'react-native';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
+import {PieChart} from 'react-native-chart-kit';
 
 import * as Location from 'expo-location';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,9 +26,88 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// const photoPage = createNativeStackNavigator();
+
+
+const Stack = createNativeStackNavigator();
+
 export default function App() {
 
   // REALLY ALL STATE VARS SHOULD BE AT THE TOP
+  
+
+  return(
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName='Photo'>
+        <Stack.Screen
+          name = "Photo"
+          component = {photoPage}
+        />
+        <Stack.Screen
+          name = "Graph"
+          component = {graphPage}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+    
+  );
+    
+}
+
+const graphPage = () => {
+  return (
+    <View>
+      <Text>Your Nutrition Breakdown</Text>
+      <PieChart
+        data={[
+          {
+            name: 'Protein',
+            population: 21500000,
+            color: 'rgba(131, 167, 234, 1)',
+            legendFontColor: '#7F7F7F',
+            legendFontSize: 15,
+          },
+          {
+            name: 'Carbohydrates',
+            population: 2800000,
+            color: '#F00',
+            legendFontColor: '#7F7F7F',
+            legendFontSize: 15,
+          },
+          {
+            name: 'Fat',
+            population: 8538000,
+            color: '#ffffff',
+            legendFontColor: '#7F7F7F',
+            legendFontSize: 15,
+          },
+        ]}
+        width={Dimensions.get('window').width - 16}
+        height={220}
+        chartConfig={{
+          backgroundColor: '#1cc910',
+          backgroundGradientFrom: '#eff3ff',
+          backgroundGradientTo: '#efefef',
+          decimalPlaces: 2,
+          color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+          style: {
+            borderRadius: 16,
+          },
+        }}
+        style={{
+          marginVertical: 8,
+          borderRadius: 16,
+        }}
+        accessor="population"
+        backgroundColor="transparent"
+        paddingLeft="15"
+        absolute //for the absolute number remove if you want percentage
+      />
+    </View>
+  );
+}
+
+const photoPage = ({navigation}) => {
   const [selectedFood, setSelectedFood] = useState();
   const [selectedPortion, setSelectedPortion] = useState();
   const URL = "http://0.0.0.0:5000";
@@ -172,34 +254,20 @@ export default function App() {
     }
   };
 
-  return(
-    
+  return (
     <View style = {styles.container}>
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'space-around',
-        }}>
-        <Button
-          title="Press to Send Notification"
-          onPress={async () => {
-            await sendPushNotification(expoPushToken, text, address);
-          }}
-        />
-      </View>
-
-        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-        <StatusBar style="auto" />
-
-        <View style = {styles.imgBox}>
-          {
-            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
-             <Image
-              source={{ uri: pickedImagePath }}
-              style={styles.image}
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'space-around',
+            }}>
+            <Button
+              title="Press to Send Notification"
+              onPress={async () => {
+                await sendPushNotification(expoPushToken, text, address);
+              }}
             />
-          }
         </View>
         <Button
           title = "Select from Image Gallery"
@@ -242,12 +310,38 @@ export default function App() {
            null }
           
         </View>
-        
-
-
+            
+        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+        <StatusBar style="auto" />
+        <Button
+              title = "Go to next page"
+              onPress={() => navigation.navigate('Graph')}
+            />
+          <Button
+              title = "Select from Image Gallery"
+              onPress = {pickImage}
+            />
+            <View style={styles.imageContainer}>
+              
+            </View>
+            <View style = {styles.imgBox}>
+              {
+                pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+                 <Image
+                  source={{ uri: pickedImagePath }}
+                  style={styles.image}
+                />
+              }
+            </View>
       </View>
   );
+
     
+
+            
+            
+    
+  
 }
 
 // Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
