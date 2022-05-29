@@ -41,11 +41,11 @@ export default function App() {
       <Stack.Navigator initialRouteName='Photo'>
         <Stack.Screen
           name = "Photo"
-          component = {photoPage}
+          component = {PhotoPage}
         />
         <Stack.Screen
           name = "Graph"
-          component = {graphPage}
+          component = {GraphPage}
         />
       </Stack.Navigator>
     </NavigationContainer>
@@ -54,7 +54,7 @@ export default function App() {
     
 }
 
-const graphPage = () => {
+const GraphPage = () => {
   return (
     <View>
       <Text>Your Nutrition Breakdown</Text>
@@ -107,7 +107,7 @@ const graphPage = () => {
   );
 }
 
-const photoPage = ({navigation}) => {
+const PhotoPage = ({navigation}) => {
   const [selectedFood, setSelectedFood] = useState();
   const [selectedPortion, setSelectedPortion] = useState();
   const URL = "http://0.0.0.0:5000";
@@ -118,6 +118,8 @@ const photoPage = ({navigation}) => {
   const [expoPushToken, setExpoPushToken] = useState('');
   const [notification, setNotification] = useState(false);
   const [dishPortions, setDishPortions] = useState([]);
+
+  const [rows, setRows] = useState([1]);
 
   useEffect(() => {
     axios.get(`${URL}/dishPortions?meal=${meal}&hall=${hall}`).then(response => {
@@ -264,7 +266,11 @@ const photoPage = ({navigation}) => {
     }
   };
 
-  let rows = [1,2,3];
+  function addRow() {
+    rows.push(rows.length + 1);
+    setRows([...rows]);
+  }
+
   const DishSelect = rows.map((r, i) => {
     return (
       <View key={i} style={styles.entry}>
@@ -326,6 +332,11 @@ const photoPage = ({navigation}) => {
 
         <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
         { DishSelect }
+
+        <Button
+            title = "Add food"
+            onPress={() => addRow()}
+        />
             
         <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
         <StatusBar style="auto" />
