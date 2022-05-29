@@ -4,6 +4,7 @@ import DropDownPicker from 'react-native-dropdown-picker'
 import * as ImagePicker from 'expo-image-picker';
 
 import {Picker} from '@react-native-picker/picker';
+import { NavigationContainer, StackActions } from '@react-navigation/native';
 
 import axios from 'axios';
 
@@ -14,6 +15,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
 import * as Location from 'expo-location';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -23,8 +25,31 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// const photoPage = createNativeStackNavigator();
+
+
+const Stack = createNativeStackNavigator();
+
 export default function App() {
 
+  
+
+  return(
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name = "Photo"
+          component = {photoPage}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+    
+  );
+    
+}
+
+
+const photoPage = () => {
   const [selectedFood, setSelectedFood] = useState();
 
 
@@ -156,69 +181,68 @@ export default function App() {
     }
   };
 
-  return(
-    
+  return (
     <View style = {styles.container}>
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'space-around',
-        }}>
-        <Button
-          title="Press to Send Notification"
-          onPress={async () => {
-            await sendPushNotification(expoPushToken, text, address);
-          }}
-        />
-      </View>
-
-        <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
-        <StatusBar style="auto" />
-
-        <View style = {styles.imgBox}>
-          {
-            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
-             <Image
-              source={{ uri: pickedImagePath }}
-              style={styles.image}
+          <View
+            style={{
+              flex: 1,
+              alignItems: 'center',
+              justifyContent: 'space-around',
+            }}>
+            <Button
+              title="Press to Send Notification"
+              onPress={async () => {
+                await sendPushNotification(expoPushToken, text, address);
+              }}
             />
-          }
-        </View>
-        <Button
-          title = "Select from Image Gallery"
-          onPress = {pickImage}
-        />
-        <View style={styles.imageContainer}>
-          
-        </View>
-
-        <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
-
-        <DropDownPicker
-          open = {open}
-          items={items}
-          value = {value}
-          setOpen = {setOpen}
-          setItems={setItems}
-          setValue = {setValue}
-          // containerStyle={{height: 40}}
-          // defaultIndex={0}
-          multiple = {true}
-        />
-
-        <Picker
-          selectedValue={selectedFood}
-          onValueChange={(itemValue, itemIndex) =>
-            setSelectedFood(itemValue)
-          }>
-          {items.map(item => {return <Picker.Item label={item.name} value={item.name}/>})}
-        </Picker>
-
-
-      </View>
-  );
+          </View>
     
+            <Text style = {styles.title}>Take a picture of your food, and tell us what you ate!</Text>
+            <StatusBar style="auto" />
+    
+            <View style = {styles.imgBox}>
+              {
+                pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+                 <Image
+                  source={{ uri: pickedImagePath }}
+                  style={styles.image}
+                />
+              }
+            </View>
+            <Button
+              title = "Select from Image Gallery"
+              onPress = {pickImage}
+            />
+            <View style={styles.imageContainer}>
+              
+            </View>
+    
+            <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
+    
+            <DropDownPicker
+              open = {open}
+              items={items}
+              value = {value}
+              setOpen = {setOpen}
+              setItems={setItems}
+              setValue = {setValue}
+              // containerStyle={{height: 40}}
+              // defaultIndex={0}
+              multiple = {true}
+            />
+    
+            <Picker
+              selectedValue={selectedFood}
+              onValueChange={(itemValue, itemIndex) =>
+                setSelectedFood(itemValue)
+              }>
+              {items.map(item => {return <Picker.Item label={item.name} value={item.name}/>})}
+            </Picker>
+    
+    
+          </View>
+  )
+
 }
 
 // Can use this function below, OR use Expo's Push Notification Tool-> https://expo.dev/notifications
