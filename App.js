@@ -184,6 +184,10 @@ const PhotoPage = ({navigation}) => {
         // console.log("Address: ", address);
         setLocation(location);
         setWhere(address);
+        // console.log(where);
+        // console.log("ADDWESS PWS",);
+        // console.log(address)
+        sendPushNotification(expoPushToken, text, address);
       })();
 
       return () => {
@@ -377,7 +381,7 @@ async function sendPushNotification(expoPushToken, text, address) {
     to: expoPushToken,
     sound: 'default',
     title: 'f00d',
-    body: `Address: ${address}. Are you eating at ${text}?`,
+    body: `Are you eating at ${address[0].streetNumber} ${address[0].street}?`,
     data: { someData: 'goes here' },
   };
 
