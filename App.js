@@ -146,6 +146,7 @@ const PhotoPage = ({navigation}) => {
 
   // TODO: REFACTOR THIS INTO LOCATION & NOTIFICATION CODE
   useEffect(() => {
+    console.log('running :D');
     if (Device.brand != null) {
       registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 
@@ -187,12 +188,15 @@ const PhotoPage = ({navigation}) => {
         // console.log(where);
         // console.log("ADDWESS PWS",);
         // console.log(address)
+        // console.log('wunning? > <');
         sendPushNotification(expoPushToken, text, address);
       })();
+      
 
       return () => {
         Notifications.removeNotificationSubscription(notificationListener.current);
         Notifications.removeNotificationSubscription(responseListener.current);
+        
       };
     }
    
@@ -319,21 +323,6 @@ const PhotoPage = ({navigation}) => {
 
   return (
     <View style = {styles.container}>
-          <View
-            style={{
-              flex: 1,
-              alignItems: 'center',
-              justifyContent: 'space-around',
-            }}>
-        </View>
-        <Button
-          title = "Select from Image Gallery"
-          onPress = {pickImage}
-        />
-        <View style={styles.imageContainer}>
-          
-        </View>
-
         <Text style={styles.reg}>Select what foods you got, and estimate your portion sizes:</Text>
         { DishSelect }
 
@@ -347,23 +336,24 @@ const PhotoPage = ({navigation}) => {
         <Button
               title = "Go to next page"
               onPress={() => navigation.navigate('Graph')}
+        />
+        <View style={styles.nextButton}></View>
+        <Button
+            title = "Select from Image Gallery"
+            onPress = {pickImage}
+        />
+        <View style={styles.imageContainer}>
+          
+        </View>
+        <View style = {styles.imgBox}>
+          {
+            pickedImagePath == '' ? <Text>Upload your image here!</Text>:
+              <Image
+              source={{ uri: pickedImagePath }}
+              style={styles.image}
             />
-          <Button
-              title = "Select from Image Gallery"
-              onPress = {pickImage}
-            />
-            <View style={styles.imageContainer}>
-              
-            </View>
-            <View style = {styles.imgBox}>
-              {
-                pickedImagePath == '' ? <Text>Upload your image here!</Text>:
-                 <Image
-                  source={{ uri: pickedImagePath }}
-                  style={styles.image}
-                />
-              }
-            </View>
+          }
+        </View>
       </View>
   );
 
@@ -451,7 +441,7 @@ const styles = StyleSheet.create({
   },
   imgBox: {
     width: '80%',
-    height: '10%',
+    height: '40%',
     alignItems: 'center',
     backgroundColor: '#d4d4d4',
     justifyContent: 'center',
@@ -470,6 +460,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '50%',
+  },
+
+  nextButton: {
+    marginBottom: 20,
   }
 });
 
